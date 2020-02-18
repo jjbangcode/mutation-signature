@@ -1,0 +1,39 @@
+post_prob <- function(inf_dir)
+{
+  seg_post<-read.csv(paste(fn_dir,inf_dir,sep='' ),header=TRUE,sep=",")
+  posterior<-array(dim=c(96,30,nrow(seg_post)))
+  for (j in 1:nrow(seg_post))
+  {
+    nor_sample_sigweight<-as.numeric(seg_post[j,c(1:30)])/sum(as.numeric(seg_post[j,c(1:30)]))
+    for (k in 1:96){
+      tmp = as.numeric(nor_sample_sigweight*sigprob_val[k,]) 
+      posterior[k,,j] = tmp/sum(tmp)
+    }
+  }
+  dimnames(posterior)<-list(sigprob[,3],colnames(sigprob)[4:33],c(1:dim(posterior)[3]))
+  return(posterior)
+}
+
+fn_prob = '/share/people/starjjbang/mutation_signature/2_deconstructSigs_result/1_input/Wang_file/signature_communication/signatures_probabilities.txt'
+sigprob<-read.csv(fn_prob,header=TRUE,sep="\t",stringsAsFactors=FALSE)
+sigprob_val<-apply( sigprob[,c(4:33)],2, function(x) as.numeric(x))
+re_dir = '/share/people/starjjbang/mutation_signature/2_deconstructSigs_result/2_result/3_post_prob/'
+cn_dir = '/share/people/starjjbang/mutation_signature/2_deconstructSigs_result/1_input/Wang_file/signature_communication/posterior_segmentlevel/'
+fn_dir = '/share/people/starjjbang/mutation_signature/2_deconstructSigs_result/1_input/Wang_file/signature_communication/proportion/'
+
+file_dir =list.files(fn_dir)
+for( i in 1:length(file_dir))
+{
+  ex1 = post_prob(file_dir[i])
+  save(ex1,file=paste(re_dir,paste(strsplit(file_dir[i],'\\.')[[1]][1],'.rda',sep=''),sep=''))
+  file_num = paste('posterior',gsub("[^0-9.]", "",strsplit(file_dir[i],'\\.')[[1]][1]),'.rda',sep='')
+  cn_dat = load(paste(cn_dir, file_num,sep=''))
+  print(file_dir[i])
+  print(length(which((ex1 == posterior) == FALSE)))
+}
+
+# check 
+so_dat = load(paste(re_dir,paste(strsplit(file_dir[i],'\\.')[[1]][1],'.rda',sep=''),sep=''))
+cn_dat = load('/share/people/starjjbang/mutation_signature/2_deconstructSigs_result/1_input/Wang_file/signature_communication/posterior_segmentlevel/posterior0.rda')
+which((ex1 == posterior) == FALSE)
+
